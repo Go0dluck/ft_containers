@@ -32,42 +32,51 @@ namespace ft
 			typedef const		iterator_list<list<T> > const_iterator;
 			typedef				reverse_iterator_list<list<T> > reverse_iterator;
 			typedef const		reverse_iterator_list<list<T> > const_reverse_iterator;
+            typedef typename    Alloc::template rebind<node>::other allocator_rebind;
 		private:
             node	*_head;
 			size_type			_size;
-			allocator_type		_alloc;
+            allocator_rebind		_alloc;
 		public:
 			explicit list (const allocator_type& alloc = allocator_type()) : _alloc(alloc)
 			{
-			    _head = new node;
-                _head->next = nullptr;
-                _head->prev = nullptr;
+//			    _head = new node;
+                _head = _alloc.allocate(1);
+                _alloc.construct(_head, node());
+                _head->next = _head;
+                _head->prev = _head;
 				_size = 0;
 			}
 			explicit list (size_type n, const value_type& val = value_type(), const allocator_type& alloc = allocator_type())
 			{
-                _head = new node;
-                _head->next = nullptr;
-                _head->prev = nullptr;
                 _alloc = alloc;
+//                _head = new node;
+                _head = _alloc.allocate(1);
+                _alloc.construct(_head, node());
+                _head->next = _head;
+                _head->prev = _head;
                 _size = 0;
                 assign(n, val);
 			}
 			template <class InputIterator>
             list (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type(), typename ft::enable_if<!ft::integral<InputIterator>::value >::type* = 0)
             {
-                _head = new node;
-                _head->next = nullptr;
-                _head->prev = nullptr;
                 _alloc = alloc;
+//                _head = new node;
+                _head = _alloc.allocate(1);
+                _alloc.construct(_head, node());
+                _head->next = _head;
+                _head->prev = _head;
                 _size = 0;
                 assign(first, last);
             }
             list (const list &cpy)
             {
-                _head = new node;
-                _head->next = nullptr;
-                _head->prev = nullptr;
+//                _head = new node;
+                _head = _alloc.allocate(1);
+                _alloc.construct(_head, node());
+                _head->next = _head;
+                _head->prev = _head;
                 _size = 0;
                 assign(cpy.begin(), cpy.end());
                 _size = cpy.size();
@@ -77,7 +86,9 @@ namespace ft
             {
                 if (this == &oper)
                     return (*this);
-                _head = new node;
+//                _head = new node;
+                _head = _alloc.allocate(1);
+                _alloc.construct(_head, node());
                 _head->next = nullptr;
                 _head->prev = nullptr;
                 _size = 0;
@@ -89,6 +100,9 @@ namespace ft
 			~list()
             {
                 clear();
+//                delete _head;
+                _alloc.destroy(_head);
+                _alloc.deallocate(_head, 1);
             }
             //////////////Iterators//////////////
             iterator begin()
@@ -105,7 +119,7 @@ namespace ft
             }
             const_iterator end() const
             {
-                return (const_iterator(_head->prev->next));
+                return (const_iterator(_head));
             }
             reverse_iterator rbegin()
             {
@@ -134,7 +148,7 @@ namespace ft
             }
             size_type max_size() const
             {
-                return (_alloc.max_size() / (24 / sizeof(value_type)));
+                return (_alloc.max_size());
             }
             ///////////Element access:///////////
             reference front()
@@ -180,7 +194,8 @@ namespace ft
             }
             void push_front (const value_type& val)
             {
-                node *_node = new node;
+                node *_node = _alloc.allocate(1);
+                _alloc.construct(_node, node());
 
                 _node->data = val;
                 if (_size == 0) {
@@ -205,13 +220,16 @@ namespace ft
                 {
 			        tmp = _head->next;
 			        _head->next = tmp->next;
-			        delete tmp;
+//			        delete tmp;
+                    _alloc.destroy(tmp);
+                    _alloc.deallocate(tmp, 1);
 			        _size--;
                 }
             }
 			void push_back(const value_type& val)
 			{
-                node *_node = new node;
+                node *_node = _alloc.allocate(1);
+                _alloc.construct(_node, node());
 
                 _node->data = val;
                 if (_size == 0) {
@@ -237,14 +255,17 @@ namespace ft
 			        tmp = _head->prev;
 			        _head->prev = tmp->prev;
 			        tmp->prev->next = _head;
-			        delete (tmp);
+//			        delete (tmp);
+                    _alloc.destroy(tmp);
+                    _alloc.deallocate(tmp, 1);
                     _size--;
                 }
             }
             iterator insert (iterator position, const value_type& val)
             {
                 node *tmp = position.get_node();
-                node *new_node = new node;
+                node *new_node = _alloc.allocate(1);
+                _alloc.construct(new_node, node());
                 new_node->data = val;
                 new_node->next = tmp;
                 new_node->prev = tmp->prev;
@@ -273,8 +294,10 @@ namespace ft
 			    node *tmp = position.get_node();
 			    tmp->next->prev = tmp->prev;
 			    tmp->prev->next = tmp->next;
-			    delete tmp;
+//			    delete tmp;
 			    _size--;
+                _alloc.destroy(tmp);
+                _alloc.deallocate(tmp, 1);
 			    return (iterator(tmp->next));
             }
             iterator erase (iterator first, iterator last)
@@ -294,7 +317,6 @@ namespace ft
 			    x.assign(this->begin(), this->end());
                 this->assign(tmp.begin(), tmp.end());
                 tmp.clear();
-                delete tmp._head;
             }
             void resize (size_type n, value_type val = value_type())
             {

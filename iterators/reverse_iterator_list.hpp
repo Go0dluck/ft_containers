@@ -23,11 +23,11 @@ class reverse_iterator_list
 		};
 		bool operator==(const reverse_iterator_list &itr) const
 		{
-			return (_node != itr._node);
+			return (_node == itr._node);
 		}
 		bool operator!=(const reverse_iterator_list &itr) const
 		{
-			return (_node == itr._node);
+			return (_node != itr._node);
 		}
 		value_type operator*()
 		{
@@ -45,7 +45,7 @@ class reverse_iterator_list
 		reverse_iterator_list operator++(int)
 		{
 			reverse_iterator_list tmp = *this;
-			--(*this);
+			++(*this);
 			return (tmp);
 		}
 		reverse_iterator_list &operator--()
@@ -56,7 +56,7 @@ class reverse_iterator_list
 		reverse_iterator_list operator--(int)
 		{
 			reverse_iterator_list tmp = *this;
-			++(*this);
+			--(*this);
 			return (tmp);
 		}
 };

@@ -23,11 +23,11 @@ class reverse_random_iterator
 		};
 		bool operator==(const reverse_random_iterator &itr) const
 		{
-			return (_pointer != itr._pointer);
+			return (_pointer == itr._pointer);
 		}
 		bool operator!=(const reverse_random_iterator &itr) const
 		{
-			return (_pointer == itr._pointer);
+			return (_pointer != itr._pointer);
 		}
 		reference operator*()
 		{
@@ -45,7 +45,7 @@ class reverse_random_iterator
 		reverse_random_iterator operator++(int)
 		{
 			reverse_random_iterator tmp = *this;
-			--(_pointer);
+			++(_pointer);
 			return (tmp);
 		}
 		reverse_random_iterator &operator--()
@@ -56,7 +56,7 @@ class reverse_random_iterator
 		reverse_random_iterator operator--(int)
 		{
 			reverse_random_iterator tmp = *this;
-			++(_pointer);
+			--(_pointer);
 			return (tmp);
 		}
 		reverse_random_iterator operator+(const difference_type &x) const

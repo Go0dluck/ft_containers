@@ -3,6 +3,23 @@
 
 namespace ft
 {
+    template <class K, class T>
+    class anode
+    {
+    public:
+        std::pair<K, T>   data;
+        int       height;
+        anode     *left;
+        anode     *right;
+        anode     *parent;
+        bool        end;
+        explicit anode(std::pair<K, T> val) {
+            data = val;
+            left = right = parent = nullptr;
+            height = 1;
+            end = false;
+        }
+    };
 	template <typename Iterator>
 	ptrdiff_t distance(Iterator first, Iterator last) //расчет кол-ва элементов в массиве
 	{
@@ -14,4 +31,13 @@ namespace ft
 		}
 		return (n);
 	}
+    template <class K, class T>
+    struct NodeMap
+    {
+        std::pair<K, T>   data;
+        NodeMap     *left;
+        NodeMap     *right;
+        NodeMap     *parent;
+        bool        end;
+    };
 }
