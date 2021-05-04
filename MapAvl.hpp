@@ -4,6 +4,7 @@
 #include <functional>
 #include "iterators/iterator_mapavl.hpp"
 #include "iterators/reverse_iterator_mapavl.hpp"
+#include "iterators/Utils.hpp"
 namespace ft
 {
     template < class Key, class T, class Compare = std::less<Key>, class Alloc = std::allocator<std::pair<const Key,T> > >
@@ -29,7 +30,7 @@ namespace ft
         typedef typename    Alloc::template rebind<nodeMap>::other allocator_rebind;
         class value_compare
         {
-            friend class mapavl;
+            friend class map;
         protected:
             Compare comp;
             value_compare (Compare c) : comp(c) {};
@@ -122,6 +123,8 @@ namespace ft
         {
             if (_size == 0)
             {
+                _alloc.destroy(_root);
+			    _alloc.deallocate(_root, 1);
                 node->end = true;
                 node->right = _end;
                 _end->parent = node;
@@ -168,8 +171,11 @@ namespace ft
             if (_size == 1){
                 _alloc.destroy(p);
                 _alloc.deallocate(p, 1);
-                _root->right = _end;
-                _root->end = true;
+
+				_root = _alloc.allocate(1);
+				_alloc.construct(_root, nodeMap(std::make_pair(0, 0)));
+				_root->right = _end;
+				_root->end = true;
                 _end->parent = _root;
                 return _root;
             }
@@ -210,75 +216,15 @@ namespace ft
                         min->left->parent = min;
                     if (min->right != nullptr)
                         min->right->parent = min;
-                    if (!par)
-                        _root = min;
+                    if (!par){
+						_root = min;
+						min->parent = nullptr;
+                    }
                     return balance(min);
                 }
             }
             return balance(cur);
 		}
-//        nodeMap* delNode(nodeMap *cur, nodeMap *p)
-//        {
-//            if (p->data.first > cur->data.first)
-//                cur->right = delNode(cur->right, p);
-//            else if (p->data.first < cur->data.first)
-//                cur->left = delNode(cur->left, p);
-//            else{
-//                nodeMap *pl = p->left;
-//                nodeMap *pr = p->right;
-//                nodeMap *par = p->parent;
-//                bool isRoot = (p == _root);
-//                _alloc.destroy(p);
-//                _alloc.deallocate(p, 1);
-//                if (pl != nullptr)
-//                    pl->parent = par;
-//                if (pr != nullptr)
-//                    pr->parent = par;
-//                if (!pr){
-//                    if (pl != nullptr)
-//                        pl->parent = par;
-//                    return pl;
-//                }
-//                else if (pr == _end)
-//                {
-//                    if (pl != nullptr){
-//                        nodeMap *max = findmax(pl);
-//                        max->right = _end;
-//                        max->end = true;
-//                        _end->parent = max;
-//                        pl->parent = par;
-//                        return pl;
-//                    }
-//                    else{
-//                        if (par != nullptr) {
-//                            par->end = true;
-//                            _end->parent = par;
-//                            return _end;
-//                        }
-//                        else
-//                        {
-//                            _root = _alloc.allocate(1);
-//                            _alloc.construct(_root, nodeMap(std::make_pair(0, 0)));
-//                            _root->right = _end;
-//                            _root->end = true;
-//                            _end->parent = _root;
-//                            return _root;
-//                        }
-//                    }
-//                }
-//                nodeMap *min = findmin(pr);
-//                min->right = removemin(pr);
-//                min->left = pl;
-//                if (min->left != nullptr)
-//                    min->left->parent = min;
-//                if (min->right != nullptr)
-//                    min->right->parent = min;
-//                if (isRoot)
-//                    _root = min;
-//                return balance(min);
-//            }
-//            return balance(cur);
-//        }
     public:
         explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _comp(comp), _alloc(alloc), _size(0)
         {
@@ -319,8 +265,8 @@ namespace ft
         ~map()
         {
 			clear();
-			_alloc.destroy(_root);
-			_alloc.deallocate(_root, 1);
+			  _alloc.destroy(_root);
+			  _alloc.deallocate(_root, 1);
 			_alloc.destroy(_end);
 			_alloc.deallocate(_end, 1);
         }
@@ -372,16 +318,16 @@ namespace ft
 		reverse_iterator rbegin()
 		{
 			nodeMap *tmp = _root;
-			if (_size == 0)
+			if (_root == nullptr)
 				return (reverse_iterator(tmp));
-			while (tmp->left != nullptr)
-				tmp = tmp->left;
+			while (tmp->right != _end)
+				tmp = tmp->right;
 			return (reverse_iterator(tmp));
 		}
 		const_reverse_iterator rbegin() const
 		{
 			nodeMap *tmp = _root;
-			if (_size == 0)
+			if (_root == nullptr)
 				return (const_reverse_iterator(tmp));
 			while (tmp->left != nullptr)
 				tmp = tmp->left;
@@ -390,20 +336,20 @@ namespace ft
 		reverse_iterator rend()
 		{
 			nodeMap *tmp = _root;
-			if (_size == 0)
-				return (reverse_iterator(tmp));
+			if (_root == nullptr)
+				return (reverse_iterator (_end));
 			while (tmp->end != true)
 				tmp = tmp->right;
-			return (reverse_iterator(tmp->right));
+			return (reverse_iterator (tmp->right));
 		}
 		const_reverse_iterator rend() const
 		{
 			nodeMap *tmp = _root;
-			if (_size == 0)
-				return (const_reverse_iterator(tmp));
+			if (_root == nullptr)
+				return (const_reverse_iterator (_end));
 			while (tmp->end != true)
 				tmp = tmp->right;
-			return (const_reverse_iterator(tmp->right));
+			return (const_reverse_iterator (tmp->right));
 		}
 		//////////////////////////Capacity//////////////////////////////
 		bool empty() const
@@ -431,6 +377,9 @@ namespace ft
 		//////////////////////////Modifiers/////////////////////////////
         std::pair<iterator,bool> insert (const value_type& val)
         {
+            iterator itr = find(val.first);
+			if (itr != end())
+				return std::make_pair(itr, false);
             nodeMap *tmp = _root;
             nodeMap *prev = _root;
             nodeMap *node = _alloc.allocate(1);
@@ -471,19 +420,24 @@ namespace ft
 		}
         void erase (iterator first, iterator last)
         {
+        	iterator tmp;
             while (first != last)
             {
+            	tmp = first;
+            	tmp++;
                 erase(first);
-                first++;
+                first = tmp;
             }
         }
 		void swap (map& x)
 		{
-			map tmp = x;
-			x.clear();
-			x.insert(begin(), end());
-			clear();
-			insert(tmp.begin(), tmp.end());
+			map<key_type, mapped_type> tmp;
+            tmp.insert(x.begin(), x.end());
+            x.clear();
+            x.insert(this->begin(), this->end());
+            this->clear();
+            this->insert(tmp.begin(), tmp.end());
+
 		}
 		void clear()
 		{

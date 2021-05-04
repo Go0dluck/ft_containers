@@ -20,6 +20,23 @@ namespace ft
             end = false;
         }
     };
+    template <class T>
+    class setnode
+    {
+    public:
+        T   data;
+        int         height;
+        setnode     *left;
+        setnode     *right;
+        setnode     *parent;
+        bool        end;
+        explicit setnode(T val) {
+            data = val;
+            left = right = parent = nullptr;
+            height = 1;
+            end = false;
+        }
+    };
 	template <typename Iterator>
 	ptrdiff_t distance(Iterator first, Iterator last) //расчет кол-ва элементов в массиве
 	{
